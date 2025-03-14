@@ -28,8 +28,8 @@ def print_dir_structure(directory: Path, indent_level: int = 0) -> None:
             # Recursively print the contents of the subdirectory
             print_dir_structure(item, indent_level + 1)
         else:
-            # Print file name in green
-            print(f"{indent}{Fore.GREEN}{item.name}{Style.RESET_ALL}")
+            # Print file name in yellow
+            print(f"{indent}{Fore.YELLOW}{item.name}{Style.RESET_ALL}")
 
 
 def main() -> None:
