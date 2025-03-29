@@ -1,152 +1,91 @@
-from collections import UserDict
-from datetime import datetime, timedelta
+from addressbook import (
+    AddressBook, add_contact, change_contact, show_phone, show_all,
+    add_birthday, show_birthday, birthdays
+)
 
 
-class Field:
+def parse_input(user_input: str) -> tuple[str, list[str]]:
     """
-    Base class for all fields in a contact record.
-    Stores a single string or parsed value.
+    Parses raw user input into a command and list of arguments.
+    Returns an empty command if input is blank.
     """
-    def __init__(self, value):
-        self.value = value
-
-    def __str__(self):
-        return str(self.value)
-
-
-class Name(Field):
-    """Represents the contact's name. Required field."""
-    pass
+    parts = user_input.strip().split()
+    if not parts:
+        return "", []
+    return parts[0].lower(), parts[1:]
 
 
-class Phone(Field):
+def print_help():
     """
-    Represents a phone number. Validates that the number consists of exactly 10 digits.
+    Displays a well-formatted list of available commands.
     """
-    def __init__(self, value: str):
-        self._validate(value)
-        super().__init__(value)
+    commands = {
+        "add [name] [phone]": "Add a new contact or phone to existing contact",
+        "change [name] [old] [new]": "Change a phone number",
+        "phone [name]": "Show phone numbers for a contact",
+        "all": "Show all contacts",
+        "add-birthday [name] [DD.MM.YYYY]": "Add birthday to a contact",
+        "show-birthday [name]": "Show birthday for a contact",
+        "birthdays": "Show upcoming birthdays in the next 7 days",
+        "hello": "Get a greeting from the bot",
+        "close / exit": "Exit the program"
+    }
 
-    @staticmethod
-    def _validate(value: str) -> None:
-        if not value.isdigit() or len(value) != 10:
-            raise ValueError("Phone number must be exactly 10 digits.")
+    print("\nAvailable commands:")
+    for cmd, desc in commands.items():
+        print(f"  {cmd.ljust(35)} - {desc}")
+    print()
 
 
-class Birthday(Field):
+def main():
     """
-    Represents a birthday. Validates format DD.MM.YYYY and stores as datetime.date.
+    Command-line assistant for managing contacts.
     """
-    def __init__(self, value: str):
-        try:
-            birthday_date = datetime.strptime(value, "%d.%m.%Y").date()
-        except ValueError:
-            raise ValueError("Invalid date format. Use DD.MM.YYYY")
-        super().__init__(birthday_date)
-
-    def __str__(self):
-        return self.value.strftime("%d.%m.%Y")
-
-
-class Record:
-    """
-    Represents a contact record, containing a name, list of phones, and optional birthday.
-    """
-    def __init__(self, contact_name: str):
-        self.name = Name(contact_name)
-        self.phones: list[Phone] = []
-        self.birthday: Birthday | None = None
-
-    def add_phone(self, phone: str):
-        self.phones.append(Phone(phone))
-
-    def remove_phone(self, phone: str):
-        phone_obj = self.find_phone(phone)
-        if phone_obj:
-            self.phones.remove(phone_obj)
-
-    def edit_phone(self, old_phone: str, new_phone: str):
-        phone_obj = self.find_phone(old_phone)
-        if phone_obj:
-            self.phones.remove(phone_obj)
-            self.phones.append(Phone(new_phone))
-
-    def find_phone(self, phone: str) -> Phone | None:
-        for phone_obj in self.phones:
-            if phone_obj.value == phone:
-                return phone_obj
-        return None
-
-    def add_birthday(self, birthday: str):
-        self.birthday = Birthday(birthday)
-
-    def __str__(self):
-        phones_str = "; ".join(p.value for p in self.phones)
-        birthday_str = f", birthday: {self.birthday}" if self.birthday else ""
-        return f"Contact name: {self.name.value}, phones: {phones_str}{birthday_str}"
-
-
-class AddressBook(UserDict):
-    """
-    A collection of contact records. Inherits from UserDict and allows
-    adding, finding, deleting records, and retrieving upcoming birthdays.
-    """
-    def add_record(self, record: Record):
-        self.data[record.name.value] = record
-
-    def find(self, contact_name: str) -> Record | None:
-        return self.data.get(contact_name)
-
-    def delete(self, contact_name: str):
-        if contact_name in self.data:
-            del self.data[contact_name]
-
-    def get_upcoming_birthdays(self) -> list[str]:
-        """
-        Returns a list of users to congratulate during the upcoming week.
-        If birthday falls on weekend, it is moved to Monday.
-        """
-        today = datetime.today().date()
-        one_week_later = today + timedelta(days=7)
-        upcoming_birthdays = []
-
-        for record in self.data.values():
-            if record.birthday:
-                birthday_this_year = record.birthday.value.replace(year=today.year)
-                if today <= birthday_this_year <= one_week_later:
-                    celebration_day = birthday_this_year
-                    if birthday_this_year.weekday() >= 5:  # Saturday or Sunday
-                        # Move to next Monday
-                        offset = 7 - birthday_this_year.weekday()
-                        celebration_day = birthday_this_year + timedelta(days=offset)
-                    formatted = celebration_day.strftime('%A %d.%m.%Y')
-                    upcoming_birthdays.append(f"{record.name.value}: {formatted}")
-
-        return upcoming_birthdays
-
-
-# Example usage
-if __name__ == "__main__":
-    # Create a new address book
     book = AddressBook()
+    print("Welcome to the assistant bot!")
+    print("Type 'help' to see available commands.")
 
-    # Create a record for John
-    john = Record("John")
-    john.add_phone("1234567890")
-    john.add_phone("5555555555")
-    john.add_birthday("29.03.1998")
-    book.add_record(john)
+    while True:
+        user_input = input("Enter a command: ")
+        command, args = parse_input(user_input)
 
-    # Create and add a record for Jane
-    jane = Record("Jane")
-    jane.add_phone("9876543210")
-    jane.add_birthday("01.04.1992")
-    book.add_record(jane)
+        if command == "":
+            continue  # Ignore empty input
 
-    print("All contacts:")
-    for contact in book.data.values():
-        print(contact)
+        elif command in ["close", "exit"]:
+            print("Good bye!")
+            break
 
-    print("\nUpcoming birthdays this week:")
-    for line in book.get_upcoming_birthdays():
-        print(line)
+        elif command == "hello":
+            print("How can I help you?")
+
+        elif command == "help":
+            print_help()
+
+        elif command == "add":
+            print(add_contact(args, book))
+
+        elif command == "change":
+            print(change_contact(args, book))
+
+        elif command == "phone":
+            print(show_phone(args, book))
+
+        elif command == "all":
+            print(show_all(book))
+
+        elif command == "add-birthday":
+            print(add_birthday(args, book))
+
+        elif command == "show-birthday":
+            print(show_birthday(args, book))
+
+        elif command == "birthdays":
+            print(birthdays(book))
+
+        else:
+            print("Invalid command. Type 'help' for a list of commands.")
+
+
+if __name__ == "__main__":
+    main()
