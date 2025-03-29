@@ -44,7 +44,10 @@ class Record:
 
     def add_phone(self, phone: str):
         """Adds a new phone number to the contact."""
-        self.phones.append(Phone(phone))
+        try:
+            self.phones.append(Phone(phone))
+        except ValueError as e:
+            print(f"Error adding phone: {e}")
 
     def remove_phone(self, phone: str):
         """Removes a phone number from the contact if it exists."""
@@ -56,8 +59,13 @@ class Record:
         """Replaces an existing phone number with a new one."""
         phone_obj = self.find_phone(old_phone)
         if phone_obj:
-            self.phones.remove(phone_obj)
-            self.phones.append(Phone(new_phone))
+            try:
+                self.phones.remove(phone_obj)
+                self.phones.append(Phone(new_phone))
+            except ValueError as e:
+                print(f"Error editing phone: {e}")
+        else:
+            print(f"Phone {old_phone} not found in contact {self.name.value}")
 
     def find_phone(self, phone: str) -> Phone | None:
         """Finds and returns the Phone object matching the given number, or None."""
@@ -99,6 +107,7 @@ if __name__ == "__main__":
     john_record = Record("John")
     john_record.add_phone("1234567890")
     john_record.add_phone("5555555555")
+    john_record.add_phone("invalid123")  # Invalid number
     book.add_record(john_record)
 
     # Create and add a record for Jane
@@ -114,7 +123,7 @@ if __name__ == "__main__":
     john = book.find("John")
     if john:
         john.edit_phone("1234567890", "1112223333")
-        print(john)
+        john.edit_phone("5555555555", "badnumber")  # Invalid new phone
 
         # Find a specific phone number
         found_phone = john.find_phone("5555555555")
