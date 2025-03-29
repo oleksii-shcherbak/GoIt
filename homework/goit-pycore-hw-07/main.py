@@ -50,7 +50,7 @@ def main():
         command, args = parse_input(user_input)
 
         if command == "":
-            continue  # Ignore empty input
+            continue
 
         elif command in ["close", "exit"]:
             print("Good bye!")
