@@ -177,3 +177,6 @@ cython_debug/
 
 # Ignore macOS system files
 .DS_Store
+
+# Ignore serialized address book file
+addressbook.pkl
